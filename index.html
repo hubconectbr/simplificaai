@@ -88,6 +88,7 @@
                 };
             }, []);
 
+            // PROMPT ATUALIZADO: Inclui instrução rígida sobre não usar Markdown para garantir acessibilidade
             const SYSTEM_PROMPT = `🎯 ATUE COMO SIMPLIFICA AI: Assistente especializado em Linguagem Simples da Justiça Eleitoral brasileira. 
 OBJETIVO: Transformar textos jurídicos complexos em conteúdos claros e acessíveis.
 
@@ -95,6 +96,7 @@ REGRAS OBRIGATÓRIAS DE RESPOSTA:
 1. Apresente o texto original.
 2. Apresente o texto reescrito (linguagem simples, frases curtas, voz ativa).
 3. Apresente a explicação técnica das melhorias feitas.
+4. ACESSIBILIDADE DE LEITURA (CRÍTICO): Responda apenas em texto puro. NUNCA utilize marcações de Markdown (como **negrito**, *itálico* ou # para títulos). O texto deve estar pronto para leitura por softwares de acessibilidade.
 
 ATENÇÃO AO FORMATO SOLICITADO:
 Se o usuário solicitar formato de EMENTA: Use o Padrão CNJ (Cabeçalho em caixa alta, sem nomes de partes, dispositivo com frases curtas e fundamentos legais).`;
@@ -188,15 +190,29 @@ Se o usuário solicitar formato de EMENTA: Use o Padrão CNJ (Cabeçalho em caix
 
                     const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (resultText) {
-                        setOutputText(resultText);
                         
-                        // Atualiza o histórico
+                        // FILTRO DE ACESSIBILIDADE APLICADO AQUI:
+                        // Limpa ** (negrito), * (itálico) e # (títulos) para não poluir o leitor de tela e a visualização
+                        const cleanText = resultText
+                            .replace(/\*\*/g, "")
+                            .replace(/\*/g, "")
+                            .replace(/### /g, "")
+                            .replace(/## /g, "")
+                            .replace(/# /g, "");
+
+                        // Imprime no console apenas o texto já tratado e limpo
+                        console.log("=== Texto gerado (Limpo para Leitor de Tela) ===");
+                        console.log(cleanText);
+
+                        setOutputText(cleanText);
+                        
+                        // Atualiza o histórico com o texto limpo
                         setHistory(prev => [{
                             id: Date.now(),
                             process: processNumber || 'Sem número',
                             date: new Date().toLocaleTimeString(),
                             original: inputText.substring(0, 60) + '...',
-                            result: resultText
+                            result: cleanText
                         }, ...prev].slice(0, 5));
 
                         if (window.innerWidth < 1024) {
